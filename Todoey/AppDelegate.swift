@@ -17,7 +17,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
-        //print(NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask,true).last! as String)
+      print(NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask,true).last! as String)
         
         //print(Realm.Configuration.defaultConfiguration.fileURL)
        
@@ -82,6 +82,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 fatalError("Unresolved error \(nserror), \(nserror.userInfo)")
             }
         }
+    }
+    func updateModel(at indexPath: IndexPath){
+        // update data model
+        
     }
     
 }

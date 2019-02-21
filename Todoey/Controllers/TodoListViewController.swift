@@ -8,10 +8,11 @@
 
 import UIKit
 import RealmSwift
-
-class TodoListViewController: UITableViewController {
+import ChameleonFramework
+class TodoListViewController: SwipeTableViewController{
     let realm = try! Realm()
     
+    @IBOutlet weak var searchBar: UISearchBar!
     var  toDoItems :Results<Item>?
     
     var selectedCategory : Category? {
@@ -19,14 +20,39 @@ class TodoListViewController: UITableViewController {
             loadItems()
         }
     }
+    override func viewWillAppear(_ animated: Bool) {
+        
+        guard let color = selectedCategory?.color else { fatalError() }
+        guard let navBarColor = UIColor(hexString: color) else {fatalError()}
+                title = selectedCategory?.name
+                navigationController?.navigationBar.barTintColor = navBarColor
+                searchBar.barTintColor = navBarColor
+                navigationController?.navigationBar.tintColor = navBarColor
+                navigationController?.navigationBar.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor : ContrastColorOf(navBarColor, returnFlat: true)]
+            }
+    override func viewWillDisappear(_ animated: Bool) {
+        guard let originalColor = UIColor(hexString: "1D9BF6") else {
+            fatalError()
+        }
+        navigationController?.navigationBar.barTintColor = originalColor
+        navigationController?.navigationBar.tintColor = FlatWhite()
+        
+        navigationController?.navigationBar.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor : ContrastColorOf(FlatWhite(), returnFlat: true)]
+    }
+            
+    
+    
     
     let dataFilePath = FileManager.default.urls(for : .documentDirectory, in : .userDomainMask).first?.appendingPathComponent("Items.plist")
     // let defaults = UserDefaults.standard
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
     
-       
+        tableView.rowHeight = 80.0
+        
+      
          loadItems()
    
         
@@ -47,19 +73,35 @@ class TodoListViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        let cell = tableView.dequeueReusableCell(withIdentifier: "todoItemCell", for: indexPath)
-       cell.textLabel?.text = toDoItems?[indexPath.row].title ?? "No items added yet"
-if let item = toDoItems?[indexPath.row]{
-
+       let cell = super.tableView(tableView, cellForRowAt: indexPath)
+     
+        
+        if let item = toDoItems?[indexPath.row]{
+            cell.textLabel?.text = toDoItems?[indexPath.row].title
             cell.accessoryType = item.done ? .checkmark : .none
+            if let color = UIColor(hexString: (selectedCategory?.color)!)!.darken(byPercentage: CGFloat(indexPath.row) / CGFloat((toDoItems?.count)!))
+            {
+                cell.backgroundColor = color
+                cell.textLabel?.textColor = ContrastColorOf(color, returnFlat: true)
+            }
+           
         }else{
             cell.textLabel?.text = " no items item added"
         }
-
-        
         return cell
-       
-        
+    }
+    override func updateModel(at indexPath: IndexPath) {
+        if let itemForDeletion = self.toDoItems?[indexPath.row]{
+            do {
+                try self.realm.write {
+                    self.realm.delete(itemForDeletion)
+                }
+                
+            }catch{
+                print("Error deleting item , \(error)")
+            }
+            
+        }
     }
      //MARK - TableView Delegate Maethods
     
